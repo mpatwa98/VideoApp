@@ -16,7 +16,6 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from django.urls import re_path
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
@@ -26,13 +25,13 @@ from VideoStore.views import home, upload_file, fetch_file
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    re_path('signup', views.signup),
-    re_path('login', views.login),
-    re_path('test_token', views.test_token),
-    path('', home),
-    path('upload/', upload_file),
-    path('fetch/', fetch_file),
-    path('', include('VideoStore.urls')),
+    path('signup/', views.signup, name='signup'),
+    path('login/', views.login, name='login'),
+    path('test_token/', views.test_token, name='test_token'),
+    path('', home, name='home'),
+    path('upload/', upload_file, name='upload_file'),
+    path('fetch/', fetch_file, name='fetch_file'),
+    path('api-auth/', include('rest_framework.urls')),
 ]
 
 if settings.DEBUG:
