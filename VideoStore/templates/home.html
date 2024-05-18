@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Home</title>
+	</head>
+	<body>
+		<div class="form-container">
+			<div class="form-group">
+				<label for="title">Title</label>
+				<input type="text" id="title" placeholder="Title" />
+			</div>
+			<div class="form-group">
+				<label for="description">Description</label>
+				<input type="textarea" id="description" placeholder="Description" />
+			</div>
+			<div class="form-group">
+				<label for="file">Upload File</label>
+				<input type="file" id="file" />
+			</div>
+			<button id="upload-btn" onclick="uploadFile()">Submit</button>
+			<br />
+			<button id="fetch-btn" onclick="fetchFile()">Fetch Thumbnails</button>
+			<div id="images"></div>
+		</div>
+		<script>
+			let task = 0;
+
+			function addImages(images) {
+				var element = document.getElementById("images");
+				for (var i = 0; i < images.length; i++) {
+					element.innerHTML += `<img src="${images[i]}" style="height:100px"> <br/>`;
+				}
+			}
+
+			async function uploadFile() {
+				var title = document.getElementById("title").value;
+				var description = document.getElementById("description").value;
+				var file = document.getElementById("file").files[0];
+
+				var formData = new FormData();
+				formData.append("title", title);
+				formData.append("description", description);
+				formData.append("video", file);
+				formData.append("csrfmiddlewaretoken", "{{ csrf_token }}");
+
+				for (var pair of formData.entries()) {
+					console.log(pair[0] + ": " + pair[1]);
+				}
+
+				await fetch("upload/", {
+					method: "POST",
+					body: formData,
+				})
+					.then((res) => res.json())
+					.then((result) => {
+						console.log(result);
+						task = result.task_id;
+						var element = document.getElementById("images");
+						element.innerHTML += `<p>uploaded ${result.task_id}</p> <br>`;
+					})
+					.catch((error) => {
+						console.error("Error:", error);
+					});
+			}
+
+			async function fetchFile() {
+				if (!task) {
+					console.error("No task ID available.");
+					return;
+				}
+
+				await fetch("fetch/", {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+						"X-CSRFToken": "{{ csrf_token }}",
+					},
+					body: JSON.stringify({ task_id: task }),
+				})
+					.then((res) => res.json())
+					.then((result) => {
+						console.log(result);
+						if (result.status === 200) {
+							addImages(result.images);
+						} else {
+							console.log(result.message);
+						}
+					})
+					.catch((error) => {
+						console.error("Error:", error);
+					});
+			}
+		</script>
+	</body>
+</html>
